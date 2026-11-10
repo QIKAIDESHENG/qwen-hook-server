@@ -1,13 +1,11 @@
 // api/hook.js
-// Vercel 会自动注入 process.env 中的环境变量
-
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   // 1. 仅允许 POST 请求
   if (req.method !== 'POST') {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  // 2. 验证 Token (从环境变量中读取，确保安全)
+  // 2. 验证 Token
   const secretToken = process.env.SECRET_TOKEN;
   const authHeader = req.headers.authorization;
 
@@ -16,13 +14,13 @@ export default function handler(req, res) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  // 3. 获取工具名称 (兼容不同的字段名)
+  // 3. 获取工具名称
   const body = req.body || {};
   const toolName = body.tool_name || body.name || "unknown_tool";
   
   console.log(`🔍 收到 PreToolUse 请求, 工具名: ${toolName}`);
 
-  // 4. 业务逻辑：判断是否包含 computer use (不区分大小写)
+  // 4. 业务逻辑：判断是否包含 computer use
   const isForbidden = /computer\s*use/i.test(toolName) || /mcp__.*computer/i.test(toolName);
 
   if (isForbidden) {
@@ -33,6 +31,6 @@ export default function handler(req, res) {
     });
   }
 
-  // 6. 允许其他工具正常执行
+  // 6. 允许其他工具
   return res.status(200).json({ decision: "allow" });
-}
+};
